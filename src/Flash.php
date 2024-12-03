@@ -1,9 +1,11 @@
 <?php
 namespace axyr\flashmessage;
-use \SilverStripe\View\ViewableData;
-use \SilverStripe\View\TemplateGlobalProvider;
 
-use \SilverStripe\View\Requirements;
+use BadMethodCallException;
+use SilverStripe\View\ViewableData;
+use SilverStripe\View\TemplateGlobalProvider;
+
+use SilverStripe\View\Requirements;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Injector\Injector;
 
@@ -71,7 +73,7 @@ class Flash extends ViewableData implements TemplateGlobalProvider
      */
     public function __construct($data)
     {
-        $this->data = (array)$data + (array)self::config()->defaults;
+        $this->data = (array)$data + (array)self::config()->get('defaults');
 
         parent::__construct();
     }
@@ -116,15 +118,14 @@ class Flash extends ViewableData implements TemplateGlobalProvider
             $data['FadeOut'] = $fadeOut;
         }
 
-        if('modal' === $type) {
+        if ('modal' === $type) {
             $data['IsModal'] = true;
         }
 
         $request = Injector::inst()->get(HTTPRequest::class);
         $session = $request->getSession();
 
-        $session->set(Flash::config()->session_name, $data);
-
+        $session->set(Flash::config()->get('session_name'), $data);
     }
 
     /**
@@ -136,7 +137,7 @@ class Flash extends ViewableData implements TemplateGlobalProvider
         $request = Injector::inst()->get(HTTPRequest::class);
         $session = $request->getSession();
 
-        $key  = Flash::config()->session_name;
+        $key  = Flash::config()->get('session_name');
         $data = $session->get($key);
 
         $session->clear($key);
@@ -149,10 +150,10 @@ class Flash extends ViewableData implements TemplateGlobalProvider
      */
     public function forTemplate()
     {
-        if (self::config()->load_javascript) {
+        if (self::config()->get('load_javascript')) {
              Requirements::javascript('axyr/silverstripe-flashmessage: client/javascript/flashmessage.js');
         }
-        return $this->renderWith(self::config()->template, $this->data);
+        return $this->renderWith(self::config()->get('template'), $this->data);
     }
 
     /**
@@ -162,11 +163,10 @@ class Flash extends ViewableData implements TemplateGlobalProvider
      */
     public static function __callStatic($method, $args)
     {
-        if (in_array($method, self::config()->supported_methods)) {
+        if (in_array($method, self::config()->get('supported_methods'))) {
             self::set($args[0], $method, isset($args[1]) ? $args[1] : null, isset($args[2]) ? $args[2] : null);
         } else {
             throw new BadMethodCallException("Method '$method' does not exist on " . __CLASS__);
         }
     }
-
 }
